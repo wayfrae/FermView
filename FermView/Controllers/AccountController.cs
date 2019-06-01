@@ -57,6 +57,18 @@ namespace FermView.Controllers
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+
+            // Require the user to have a confirmed email before they can log on.
+            var user = await _userManager.FindByNameAsync(model.Email);
+            if (user != null)
+            {
+                if (!await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    ViewBag.errorMessage = "You must have a confirmed email to log on.";
+                    return View("Error");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
@@ -230,9 +242,14 @@ namespace FermView.Controllers
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
                     await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
 
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    //await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    ViewBag.Message = "Check your email and confirm your account, you must be confirmed "
+                         + "before you can log in.";
+
                     _logger.LogInformation("User created a new account with password.");
-                    return RedirectToLocal(returnUrl);
+                    return View("Info");
+                    //return RedirectToLocal(returnUrl);
                 }
                 AddErrors(result);
             }
