@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SendGrid;
+using SendGrid.Helpers.Mail;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +13,17 @@ namespace FermView.Services
     {
         public Task SendEmailAsync(string email, string subject, string message)
         {
-            return Task.CompletedTask;
+            async Task Execute()
+            {
+                var apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+                var client = new SendGridClient(apiKey);
+                var from = new EmailAddress("no_reply@FermView.com", "FermView Bot");
+                var to = new EmailAddress(email);
+                var msg = MailHelper.CreateSingleEmail(from, to, subject, "", message);
+                var response = await client.SendEmailAsync(msg);
+            }
+
+            return Execute();
         }
     }
 }

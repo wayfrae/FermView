@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using FermView.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FermView.Controllers
 {
@@ -22,6 +23,7 @@ namespace FermView.Controllers
             return View();
         }
 
+        [Authorize]
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
