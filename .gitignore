@@ -3,6 +3,7 @@
 
 #appSettings.json // Azure key vault will be used in production environment
 appSettings.json
+appsettings.json
 
 # User-specific files
 *.suo
