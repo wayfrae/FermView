@@ -22,9 +22,7 @@ namespace FermViewApi.Controllers
 
             if (_context.Temperatures.Count() == 0)
             {
-                // for early testing
-                // Create a new temp if collection is empty,
-                // which means you can't delete all TodoItems.
+                // for early testing                
                 _context.Temperatures.Add(new TemperatureData { Temperature = 69.69m });
                 _context.SaveChanges();
             }
