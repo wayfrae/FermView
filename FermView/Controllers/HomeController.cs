@@ -22,11 +22,18 @@ namespace FermView.Controllers
 
             return View();
         }
-
-        [Authorize]
+        
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
+
+            return View();
+        }
+
+        [Authorize]
+        public IActionResult Brews()
+        {
+            ViewData["Message"] = "The page that shows all the brews.";
 
             return View();
         }
