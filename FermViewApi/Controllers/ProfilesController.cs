@@ -10,57 +10,57 @@ using FermViewApi.Models;
 namespace FermViewApi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Brews")]
-    public class BrewsController : Controller
+    [Route("api/Profiles")]
+    public class ProfilesController : Controller
     {
         private readonly TemperatureDataContext _context;
 
-        public BrewsController(TemperatureDataContext context)
+        public ProfilesController(TemperatureDataContext context)
         {
             _context = context;
         }
 
-        // GET: api/Brews
+        // GET: api/Profiles
         [HttpGet]
-        public IEnumerable<Brew> GetBrew()
+        public IEnumerable<Profile> GetProfile()
         {
-            return _context.Brews;
+            return _context.Profiles;
         }
 
-        // GET: api/Brews/5
+        // GET: api/Profiles/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBrew([FromRoute] int id)
+        public async Task<IActionResult> GetProfile([FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var brew = await _context.Brews.SingleOrDefaultAsync(m => m.ID == id);
+            var profile = await _context.Profiles.SingleOrDefaultAsync(m => m.ID == id);
 
-            if (brew == null)
+            if (profile == null)
             {
                 return NotFound();
             }
 
-            return Ok(brew);
+            return Ok(profile);
         }
 
-        // PUT: api/Brews/5
+        // PUT: api/Profiles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutBrew([FromRoute] int id, [FromBody] Brew brew)
+        public async Task<IActionResult> PutProfile([FromRoute] int id, [FromBody] Profile profile)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != brew.ID)
+            if (id != profile.ID)
             {
                 return BadRequest();
             }
 
-            _context.Entry(brew).State = EntityState.Modified;
+            _context.Entry(profile).State = EntityState.Modified;
 
             try
             {
@@ -68,7 +68,7 @@ namespace FermViewApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!BrewExists(id))
+                if (!ProfileExists(id))
                 {
                     return NotFound();
                 }
@@ -81,45 +81,45 @@ namespace FermViewApi.Controllers
             return NoContent();
         }
 
-        // POST: api/Brews
+        // POST: api/Profiles
         [HttpPost]
-        public async Task<IActionResult> PostBrew([FromBody] Brew brew)
+        public async Task<IActionResult> PostProfile([FromBody] Profile profile)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            _context.Brews.Add(brew);
+            _context.Profiles.Add(profile);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBrew", new { id = brew.ID }, brew);
+            return CreatedAtAction("GetProfile", new { id = profile.ID }, profile);
         }
 
-        // DELETE: api/Brews/5
+        // DELETE: api/Profiles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBrew([FromRoute] int id)
+        public async Task<IActionResult> DeleteProfile([FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var brew = await _context.Brews.SingleOrDefaultAsync(m => m.ID == id);
-            if (brew == null)
+            var profile = await _context.Profiles.SingleOrDefaultAsync(m => m.ID == id);
+            if (profile == null)
             {
                 return NotFound();
             }
 
-            _context.Brews.Remove(brew);
+            _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
 
-            return Ok(brew);
+            return Ok(profile);
         }
 
-        private bool BrewExists(int id)
+        private bool ProfileExists(int id)
         {
-            return _context.Brews.Any(e => e.ID == id);
+            return _context.Profiles.Any(e => e.ID == id);
         }
     }
 }

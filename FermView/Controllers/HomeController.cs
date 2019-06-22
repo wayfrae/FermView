@@ -31,9 +31,9 @@ namespace FermView.Controllers
         }
 
         [Authorize]
-        public IActionResult Brews()
+        public IActionResult Dashboard()
         {
-            ViewData["Message"] = "The page that shows all the brews.";
+            ViewData["Message"] = "The page that shows the dashboard.";
 
             return View();
         }

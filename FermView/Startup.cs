@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using FermView.Data;
 using FermView.Models;
 using FermView.Services;
+using FermViewApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace FermView
 {
@@ -32,6 +34,20 @@ namespace FermView
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.AddDbContext<TemperatureDataContext>(opt =>
+                opt.UseInMemoryDatabase("TemperatureData"));
+            //opt.UseSqlServer(ConnectionString));
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "https://dev-750345.oktapreview.com/oauth2/default";
+                    options.Audience = "api://default";
+                    options.RequireHttpsMetadata = false;
+                });
+            services.AddMvc();
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
