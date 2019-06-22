@@ -4,9 +4,9 @@ using System.Linq;
 using System.Web;
 using System.Threading.Tasks;
 using System.Data.Entity;
-using FermViewApi.Models;
+using FermView.Models;
 
-namespace FermViewApi.Data_Access
+namespace FermView.Data_Access
 {
     public class TempInitializer : DropCreateDatabaseIfModelChanges<DbContext>
     {

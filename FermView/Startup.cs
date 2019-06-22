@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using FermView.Data;
 using FermView.Models;
 using FermView.Services;
-using FermViewApi.Models;
+using FermView.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace FermView
@@ -34,9 +34,9 @@ namespace FermView
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            services.AddDbContext<TemperatureDataContext>(opt =>
-                opt.UseInMemoryDatabase("TemperatureData"));
-            //opt.UseSqlServer(ConnectionString));
+            services.AddDbContext<BrewsContext>(opt =>
+                //opt.UseInMemoryDatabase("TemperatureData"));
+                opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;

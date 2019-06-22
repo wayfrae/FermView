@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FermViewApi.Models
+namespace FermView.Models
 {
     public class TempPeriod
     {

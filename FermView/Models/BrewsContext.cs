@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FermViewApi.Models;
+using FermView.Models;
 
-namespace FermViewApi.Models
+namespace FermView.Models
 {
-    public class TemperatureDataContext : DbContext
+    public class BrewsContext : DbContext
     {
-       public TemperatureDataContext(DbContextOptions<TemperatureDataContext> options)
+       public BrewsContext(DbContextOptions<BrewsContext> options)
             : base(options)
         {
         }
@@ -23,10 +23,10 @@ namespace FermViewApi.Models
         public DbSet<TemperatureData> Temperatures { get; set; }
 
 
-        public DbSet<FermViewApi.Models.Brew> Brews { get; set; }
+        public DbSet<FermView.Models.Brew> Brews { get; set; }
 
 
-        public DbSet<FermViewApi.Models.Profile> Profiles { get; set; }
+        public DbSet<FermView.Models.Profile> Profiles { get; set; }
 
         
     }

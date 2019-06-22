@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FermViewApi.Models;
+using FermView.Models;
 
-namespace FermViewApi.Controllers
+namespace FermView.Controllers
 {
     [Produces("application/json")]
     [Route("api/Brews")]
     public class BrewsController : Controller
     {
-        private readonly TemperatureDataContext _context;
+        private readonly BrewsContext _context;
 
-        public BrewsController(TemperatureDataContext context)
+        public BrewsController(BrewsContext context)
         {
             _context = context;
         }
