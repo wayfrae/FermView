@@ -6,11 +6,20 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using FermView.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
 
 namespace FermView.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly BrewsContext _context;
+
+        public HomeController(BrewsContext context)
+        {
+            _context = context;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -34,8 +43,12 @@ namespace FermView.Controllers
         public IActionResult Dashboard()
         {
             ViewData["Message"] = "The page that shows the dashboard.";
+            using (BrewsContext context = new BrewsContext(new DbContextOptions<BrewsContext>()))
+            {
 
-            return View();
+            }
+
+            return View(_context);
         }
 
         public IActionResult Error()
