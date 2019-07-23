@@ -2,9 +2,27 @@
 @{
     ViewData["Title"] = "Dashboard";
 }
+@inject UserManager<ApplicationUser> UserManager
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
-<script src="/js/main.js"></script>
+<script type="text/javascript">
+    function registerDevice() {
+        console.log($('#registrationCode').val());
+        console.log($('#controllerName').val());
+        $.ajax({
+            url: "/Home/RegisterDevice",
+            data: {
+                "setupCode": $('#registrationCode').val(),
+                "name": $('#controllerName').val(),
+                "owner": "@UserManager.GetUserName(User)"
+            }
+        }).done(function() {
+            alert("Success!");
+        });
+        
+    }
+</script>
 <h2>Dashboard</h2>
 <br />
 <div class="row">
@@ -30,15 +48,47 @@
     </div>
 </div>
 <br />
+
 <div class="row">
     <div class="card">
-        <div class="card-header h4">Controllers</div>
+        <div class="card-header h4">Controllers<button class="btn btn-default float-right" data-toggle="modal" data-target="#modalAddController">Add Controller</button></div>
         <div class="card-body">
             Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
         </div>
     </div>
 </div>
 
+<div class="modal" id="modalAddController" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Register New Controller</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Enter the desired name for your controller device. On your controller device, click the wheel to enter the menu. Select "Register", then enter the registration code below.</p>
+                <form>
+                    <div class="form-group">
+                        <label for="controllerName">Controller Name: </label>
+                        <input class="form-control" type="text" id="controllerName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="registrationCode">Registration Code: </label>
+                        <input class="form-control" type="text" id="registrationCode" maxlength="5" />
+                    </div>
+                </form>
+                
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="registerDevice()" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @*<h3>Profile</h3>
     <div style="width:75%; height:auto; margin:auto; border-style: solid;">

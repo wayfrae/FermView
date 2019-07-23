@@ -23,11 +23,13 @@ namespace FermView.Models
         public DbSet<TemperatureData> Temperatures { get; set; }
 
 
-        public DbSet<FermView.Models.Brew> Brews { get; set; }
+        public DbSet<Brew> Brews { get; set; }
 
 
-        public DbSet<FermView.Models.Profile> Profiles { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
 
-        
+        public DbSet<Device> Devices { get; set; }
+
+
     }
 }

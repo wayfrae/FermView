@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ namespace FermView.Models
         public int ID { get; set; }
         public string UserName { get; set; }
         public string BrewName { get; set; }
+        [Column(TypeName = "Decimal(4,2)")]
         public decimal Temperature { get; set; }
         public DateTime Time { get; set; }
     }
