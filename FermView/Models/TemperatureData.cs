@@ -8,9 +8,10 @@ namespace FermView.Models
 {
     public class TemperatureData
     {
-        public int ID { get; set; }
+        public Guid ID { get; set; }
         public string UserName { get; set; }
-        public string BrewName { get; set; }
+        [ForeignKey("Brew")]
+        public Guid BrewId { get; set; }
         [Column(TypeName = "Decimal(4,2)")]
         public decimal Temperature { get; set; }
         public DateTime Time { get; set; }

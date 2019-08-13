@@ -57,6 +57,10 @@ namespace FermView.Controllers
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                returnUrl = "~/home/dashboard";
+            }
 
             // Require the user to have a confirmed email before they can log on.
             var user = await _userManager.FindByNameAsync(model.Email);

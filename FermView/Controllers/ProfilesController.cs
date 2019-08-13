@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,7 @@ namespace FermView.Controllers
 
         // GET: api/Profiles/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetProfile([FromRoute] int id)
+        public async Task<IActionResult> GetProfile([FromRoute] Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -48,7 +49,7 @@ namespace FermView.Controllers
 
         // PUT: api/Profiles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProfile([FromRoute] int id, [FromBody] Profile profile)
+        public async Task<IActionResult> PutProfile([FromRoute] Guid id, [FromBody] Profile profile)
         {
             if (!ModelState.IsValid)
             {
@@ -98,7 +99,7 @@ namespace FermView.Controllers
 
         // DELETE: api/Profiles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProfile([FromRoute] int id)
+        public async Task<IActionResult> DeleteProfile([FromRoute] Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -111,13 +112,24 @@ namespace FermView.Controllers
                 return NotFound();
             }
 
+            if (_context.Brews.FirstOrDefault(x => x.Profile == profile) != null)
+            {
+                return Conflict("You cannot remove a profile that is assigned to a brew.");
+            }
+
+            for (int i = 0; i < profile.Details.Count; i++)
+            {
+                profile.Details.RemoveAt(i);
+            }
+            
+            await _context.SaveChangesAsync();
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
 
             return Ok(profile);
         }
 
-        private bool ProfileExists(int id)
+        private bool ProfileExists(Guid id)
         {
             return _context.Profiles.Any(e => e.ID == id);
         }

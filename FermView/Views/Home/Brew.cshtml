@@ -1,0 +1,116 @@
+﻿@inject BrewsContext Context;
+@{
+    ViewData["Title"] = "Brew";
+}
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+<style>
+    .chartWrapper {
+        position: relative;
+            
+    }
+
+    .chartWrapper > canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+        pointer-events:none;
+    }
+    .chartAreaWrapper {
+        overflow-x: scroll;
+        position: relative;
+        width: 100%;
+    }
+
+    .chartAreaWrapper2 {
+          
+        position: relative;
+        height: 800px;
+    }
+
+</style>
+<h2>Brew</h2>
+   <canvas id="chart"></canvas>
+
+<script>
+    var time = [];
+    var temp = [];
+    var data = [{}];
+    var ctx = document.getElementById('chart').getContext('2d');
+    var myChart;
+
+    $.ajax({
+        url: "../../api/temps/forbrew/" + "@ViewData["id"]"
+    }).done(function(response) {
+        $.each(response,
+            function (i) {
+                var date = new Date(response[i].time);
+                var t = response[i].temperature;
+                time.push(date);
+                temp.push(t);
+                data.push({ x: date, y: t });
+            });
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Current Temperature',
+                    data: data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            tooltipFormat: 'lll',
+                        }
+                    }],             
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            suggestedMin: 55,
+                            suggestedMax: 80
+                        }
+                    }]
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    setInterval(function () {
+        console.log(JSON.stringify(myChart.data.datasets[0].data[myChart.data.datasets[0].data.length - 1].x));
+        console.log("../../api/temps/forbrew/" +
+            "@ViewData["id"]" +
+            "/" +
+            encodeURI(JSON.stringify(myChart.data.datasets[0].data[myChart.data.datasets[0].data.length - 1].x)));
+        $.ajax({
+            url: "../../api/temps/forbrew/" +
+                "@ViewData["id"]" +
+                "/" +
+                JSON.stringify(myChart.data.datasets[0].data[myChart.data.datasets[0].data.length - 1].x)
+        }).done(function (response) {
+            $.each(response,
+                function(i) {
+                    var date = new Date(response[i].time);
+                    var t = response[i].temperature;
+                    console.log(t);
+                    myChart.data.datasets[0].data.push({ x: date, y: t });
+                });
+            myChart.update();
+        });
+    }, 5000);
+    
+    function addData(chart, data) {
+        chart.data.datasets.forEach((dataset) => {
+            dataset.data.push(data);
+        });
+        chart.update();
+    }
+</script>

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FermView.Models;
+using Newtonsoft.Json;
 
 namespace FermView.Controllers
 {
@@ -20,7 +22,7 @@ namespace FermView.Controllers
             _context = context;
 
 
-            if (_context.Temperatures.Count() == 0)
+            if (!_context.Temperatures.Any())
             {
                 // for early testing                
                 _context.Temperatures.Add(new TemperatureData { Temperature = 69.69m });
@@ -37,7 +39,7 @@ namespace FermView.Controllers
 
         // GET: api/Temps/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTemperatureData([FromRoute] int id)
+        public async Task<IActionResult> GetTemperatureData([FromRoute] Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -54,9 +56,27 @@ namespace FermView.Controllers
             return Ok(temperatureData);
         }
 
+        // GET: api/Temps/ForBrew/{brew guid}
+        [HttpGet("ForBrew/{id}")]
+        public async Task<IEnumerable<TemperatureData>> GetBrewTemperatureData([FromRoute] Guid id)
+        {
+            var temperatureData = await _context.Temperatures.Where(x=>x.BrewId == id).ToListAsync();
+            return temperatureData;
+        }
+
+        // GET: api/Temps/ForBrew/{brew guid}/{time}
+        [HttpGet("ForBrew/{id}/{json}")]
+        public async Task<IEnumerable<TemperatureData>> GetBrewTemperatureDataSinceTime([FromRoute] Guid id, [FromRoute]string json)
+        {
+            DateTimeOffset time = JsonConvert.DeserializeObject<DateTimeOffset>(WebUtility.UrlDecode(json));
+            time -= TimeSpan.FromHours(6);
+            var temperatureData = await _context.Temperatures.Where(x => x.BrewId == id && x.Time > time).ToListAsync();
+            return temperatureData;
+        }
+
         // PUT: api/Temps/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTemperatureData([FromRoute] int id, [FromBody] TemperatureData temperatureData)
+        public async Task<IActionResult> PutTemperatureData([FromRoute] Guid id, [FromBody] TemperatureData temperatureData)
         {
             if (!ModelState.IsValid)
             {
@@ -97,7 +117,7 @@ namespace FermView.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            temperatureData.Time -= TimeSpan.FromHours(6);
             _context.Temperatures.Add(temperatureData);
             await _context.SaveChangesAsync();
 
@@ -106,7 +126,7 @@ namespace FermView.Controllers
 
         // DELETE: api/Temps/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTemperatureData([FromRoute] int id)
+        public async Task<IActionResult> DeleteTemperatureData([FromRoute] Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -125,7 +145,7 @@ namespace FermView.Controllers
             return Ok(temperatureData);
         }
 
-        private bool TemperatureDataExists(int id)
+        private bool TemperatureDataExists(Guid id)
         {
             return _context.Temperatures.Any(e => e.ID == id);
         }

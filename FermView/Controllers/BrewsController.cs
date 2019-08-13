@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,10 +28,60 @@ namespace FermView.Controllers
             return _context.Brews;
         }
 
+        [HttpGet("GetUserBrews/{userName}")]
+        public IEnumerable<Brew> GetUserBrews(string userName)
+        {
+            return _context.Brews.Where(x=>x.Username == userName);
+        }
+
+        // GET: api/Brews/{device guid}
+        [HttpGet("{deviceId}")]
+        public ActionResult<Brew> GetBrewForDevice(Guid? deviceId)
+        {
+            var brew = _context.Brews.FirstOrDefault(x => x.DeviceId == deviceId);
+            if (brew == null) return NotFound("A brew assigned to this device was not found.");
+            return Ok(brew);
+        }
+
+        // GET: api/Brews/5/CurrentTarget
+        [HttpGet("{deviceId}/CurrentTarget")]
+        public ActionResult<TempPeriod> GetTargetTemp([FromRoute] Guid? deviceId)
+        {
+            if (deviceId == null) return BadRequest("ID is null");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var brew = _context.Brews.FirstOrDefault(x => x.DeviceId == deviceId);
+
+            if (brew == null) return NotFound();
+            if (brew.Profile == null) return NotFound("No profile is set to this brew.");
+            if (brew.Profile == null) return NotFound("No temperatures are set to the profile set to this brew.");
+
+            if (brew.StartDate == DateTime.MinValue)
+            {
+                brew.StartDate = DateTime.Now;
+                _context.SaveChanges();
+            }
+            var timePassed = brew.StartDate - DateTime.Now;
+            int totalDuration = 0; 
+            foreach(var temp in brew.Profile.Details)
+            {
+                totalDuration += ((int)temp.Duration);
+                if (totalDuration >= timePassed.Hours) 
+                {
+                    return Ok(temp);
+                }
+            }
+            return Ok(brew.Profile.Details.Last());
+        }
+
         // GET: api/Brews/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBrew([FromRoute] int id)
+        public async Task<IActionResult> GetBrew([FromRoute] Guid? id)
         {
+            if (id == null) return BadRequest("ID is null");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -48,7 +99,7 @@ namespace FermView.Controllers
 
         // PUT: api/Brews/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutBrew([FromRoute] int id, [FromBody] Brew brew)
+        public async Task<IActionResult> PutBrew([FromRoute] Guid id, [FromBody] Brew brew)
         {
             if (!ModelState.IsValid)
             {
@@ -98,7 +149,7 @@ namespace FermView.Controllers
 
         // DELETE: api/Brews/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBrew([FromRoute] int id)
+        public async Task<IActionResult> DeleteBrew([FromRoute] Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -117,7 +168,7 @@ namespace FermView.Controllers
             return Ok(brew);
         }
 
-        private bool BrewExists(int id)
+        private bool BrewExists(Guid id)
         {
             return _context.Brews.Any(e => e.ID == id);
         }

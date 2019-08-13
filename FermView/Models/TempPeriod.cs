@@ -8,9 +8,9 @@ namespace FermView.Models
 {
     public class TempPeriod
     {
-        public int ID { get; set; }
+        public Guid ID { get; set; }
         [Column(TypeName = "Decimal(4,2)")]
         public decimal Temperature { get; set; }
-        public int Duration { get; set; }
+        public decimal Duration { get; set; }
     }
 }

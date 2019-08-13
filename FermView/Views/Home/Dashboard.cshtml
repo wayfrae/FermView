@@ -1,59 +1,334 @@
-﻿
+﻿@using System.Net
+
 @{
     ViewData["Title"] = "Dashboard";
 }
 @inject UserManager<ApplicationUser> UserManager
 
-
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
 <script type="text/javascript">
+    $(function() {
+        getAllData();
+    });
+
+    function getAllData() {
+        getProfiles();
+        getDevices();
+        getCurrentBrews();
+        setTimeout(getAllData, 5000);
+    }
+
+    var profileCount = 0;
+    var controllerCount = 0;
+
+
     function registerDevice() {
-        console.log($('#registrationCode').val());
-        console.log($('#controllerName').val());
         $.ajax({
             url: "/Home/RegisterDevice",
             data: {
                 "setupCode": $('#registrationCode').val(),
                 "name": $('#controllerName').val(),
                 "owner": "@UserManager.GetUserName(User)"
-            }
-        }).done(function() {
-            alert("Success!");
-        });
+        }
+        }).done(function (response) {
+            controllerCount = 0;
+        $("#modalAddController").modal("hide");
+        getDevices();
+        $.each(response,
+            function(i) {
+                $("#brewController")
+                    .append('<option value="' + response[i].id + '" >' + response[i].name + '</option>');
+            });
+    }).fail(function (response) {
+        console.log(response);
+        $("#deviceMessage").text(response.responseText);
+    });
+}
+
+    function getProfiles() {
         
+        $.ajax({
+            url: "/Home/GetProfiles",
+            data: { "userId": "@UserManager.GetUserId(User)" }
+        }).done(function (response) {
+            if (profileCount !== response.length) {
+                $("#brewProfile").html("<option>Select a profile...</option>");
+                profileCount = 0;
+            }        
+            $("#profileTable").html("");
+            $.each(response, function (i) {
+                if (response.length !== profileCount || profileCount === 0) {
+                    $("#brewProfile").append('<option value="' + response[i].id + '" >' + response[i].name + '</option>');
+                    profileCount++;
+                }
+                $("#profileTable").append(
+                    "<tr><td>" + response[i].name +
+                    "</td><td>" + response[i].description +
+                    "</td><td>" + response[i].hearts +
+                    "</td><td><div class='btn-group'><!--<button class='btn btn-secondary' onclick='editProfile(\"" + response[i].id + "\")'>Edit</button>-->" +
+                    "<button class='btn btn-danger' onclick='deleteProfile(\"" + response[i].id + "\")'>&times;</button></div></td></tr>")
+
+            });
+            showProfileTable($("#profileTable").html() == "");
+        });
     }
+
+    function getCurrentBrews() {
+        $.ajax({
+            url: "/Home/GetUserBrews/",
+            data: { "userName": "@UserManager.GetUserName(User)" }
+        }).done(function (response) {
+            $("#brewTable").html("");
+            $.each(response, function (i) {
+                console.log(response);
+                var minDate = new Date('0001-01-01T00:00:00');
+                var date = new Date(response[i].startDate);
+                var endDate = new Date(response[i].endDate);
+                var dateString = "";
+                var endDateString = "";
+                if (date.getTime() === minDate.getTime()) {
+                    dateString = "Not Started";
+                } else {
+                    dateString = date.toLocaleDateString();
+                }
+                if (endDate.getTime() === minDate.getTime() && date.getTime() === minDate.getTime()) {
+                    endDateString = "Not Ended"
+                }
+                else if (endDate.getTime() === minDate.getTime() && date.getTime() !== minDate.getTime()) {
+                    endDateString = "Currently Running";
+                } else {
+                    endDateString = endDate.toLocaleDateString();
+                }
+                
+                $("#brewTable").append(
+                    "<tr><td><a href='brew/" + response[i].id + "'>" + response[i].brewName +
+                    "</a></td><td>" + response[i].profile.name +
+                    "</td><td>" + dateString +
+                    "</td><td>" + endDateString +
+                    "</td><td><div class='btn-group'><!--<button class='btn btn-secondary' onclick='editBrew(\"" + response[i].id + "\")'>Edit</button>-->" +
+                    "<button class='btn btn-danger' onclick='deleteBrew(\"" + response[i].id + "\")'>&times;</button></div></td></tr>")
+            });
+            showBrewsTable($("#brewTable").html() == "");
+        });
+    }
+
+    function getDevices() {
+        
+    $.ajax({
+        url: "/Home/GetDevices",
+        data: { "userName": "@UserManager.GetUserName(User)" }
+    }).done(function (response) {
+        $("#deviceTable").html("");
+        if (controllerCount !== response.length) {
+            $("#brewController").html("<option>Select a controller...</option>");
+            controllerCount = 0;
+        }
+        $.each(response, function (i) {
+            if (controllerCount !== response.length || controllerCount === 0) {
+                $("#brewController").append('<option value="' + response[i].id + '" >' + response[i].name + '</option>');
+                controllerCount++;
+            }
+            $("#deviceTable").append("<tr><td>" + response[i].name +
+                "</td><td><div class='btn-group'><!--<button class='btn btn-secondary' onclick='editDevice(\"" + response[i].id + "\")'>Edit</button>-->" +
+                "<button class='btn btn-danger' onclick='deleteDevice(\"" + response[i].id + "\")'>&times;</button></div></td></tr>");
+        });
+        showDeviceTable($("#deviceTable").html() == "");
+    });
+    }
+
+    function deleteDevice(id) {
+        $.ajax({
+            url: "/Home/DeleteController",
+            data: { "id": id }
+        }).done(function(response) {
+            getDevices();
+        }).fail(function(response) {
+            alert(response.responseText);
+        });;
+    }
+
+    function deleteBrew(id) {
+        $.ajax({
+            url: "../api/Brews/" + id,
+            type: "DELETE"
+        }).done(function() {
+            getAllData();
+        }).fail(function(response) {
+            alert(response.responseText);
+        });
+    }
+
+    function deleteProfile(id) {
+        $.ajax({
+            url: "../api/Profiles/" + id,
+            type: "DELETE"
+        }).done(function() {
+            getAllData();
+        }).fail(function (response) {
+            console.log(response);
+            alert(response.responseText);
+        });
+    }
+
+function showProfileTable(isVisible) {
+    if (isVisible) {
+        $("#emptyProfiles").show();
+        $("#profileTableFull").hide();
+    } else {
+        $("#emptyProfiles").hide();
+        $("#profileTableFull").show();
+    }
+ }
+
+function showDeviceTable(isVisible) {
+    if (isVisible) {
+        $("#emptyDevices").show();
+        $("#deviceTableFull").hide();
+    } else {
+        $("#emptyDevices").hide();
+        $("#deviceTableFull").show();
+    }
+    }
+
+    function showBrewsTable(isVisible) {
+        if (isVisible) {
+            $("#emptyBrews").show();
+            $("#brewTableFull").hide();
+        } else {
+            $("#emptyBrews").hide();
+            $("#brewTableFull").show();
+        }
+    }
+
+function createBrew() {
+    $.ajax({
+        url: "/Home/CreateBrew",
+        data: {
+            "userName": "@UserManager.GetUserName(User)",
+            "profileId": $('#brewProfile').val(),
+            "brewName": $('#brewName').val(),
+            "deviceId": $('#brewController').val()
+        }
+    }).done(function () {
+        getCurrentBrews();
+        $("#modalAddBrew").modal("hide");
+        $('#profileController option:eq(0)').attr("selected", "selected");
+        $('#brewController option:eq(0)').attr("selected", "selected");
+    }).fail(function (response) {
+        $("#brewMessage").text(response.responseText);
+    });
+    getAllData();
+}
+
+    function createProfile() {
+        var points = [];
+
+        var temps = $('[name="temp"]').get();
+        console.log(temps);
+        var durations = $('[name="duration"]').get();
+        for (var i = 0; i < temps.length; i++) {
+            var obj = {};
+            obj.temp = temps[i].value;
+            obj.duration = durations[i].value;
+            points.push(obj);
+        }
+        console.log(JSON.stringify(points));
+        $.ajax({
+            url: "/Home/CreateProfile",
+            data: {
+                "userId": "@UserManager.GetUserId(User)",
+                "profileName": $('#profileName').val(),
+                "description": $('#profileDescription').val(),
+                "json": JSON.stringify(points)
+            }
+        }).done(function () {
+            getProfiles();
+            profileCount = 0;
+            $("#modalAddProfile").modal("hide");
+        }).fail(function () {
+            $("#profileMessage").text("There was an error saving the profile. Check your inputs.");
+        });
+        getAllData();
+    }
+
+    function addTempRow() {
+    $("#profileForm").append('<div class="form-row"><div class="col"><input type="number" class="form-control" name="temp" step="0.1" max="90" min="32" placeholder="Temperature"></div><div class="col"><input type="number" class="form-control" name="duration" step="0.01" data-toggle="tooltip" data-placement="top" placeholder="Duration (in hours)"></div></div>');
+}
 </script>
 <h2>Dashboard</h2>
 <br />
 <div class="row">
-    <div class="card">
-        <div class="card-header h4">Brews</div>
-        <div class="card-body">
-            <div class="col">
-                <h5>Current Brews</h5>
-            </div>
-            <div class="col">
-                <h5>Past Brews</h5>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header h4">Brews<button class="btn btn-default float-right" data-toggle="modal" data-target="#modalAddBrew">Create Brew</button></div>
+            <div class="card-body" id="brews">
+                <span id="emptyBrews">Your brews will appear here.</span>
+                <div class="table-responsive">
+                    <table class="table" id="brewTableFull">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Profile</th>
+                                <th scope="col">Date Started</th>
+                                <th scope="col">Date Ended</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brewTable"></tbody>
+                    </table>
+                </div>
+                <div class="col">
+                </div>
             </div>
         </div>
     </div>
 </div>
 <br />
 <div class="row">
-    <div class="card">
-        <div class="card-header h4">Profiles <button class="btn btn-default float-right">Create New</button></div>
-        <div class="card-body">
-            Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header h4">Profiles <button class="btn btn-default float-right" data-toggle="modal" data-target="#modalAddProfile">Create New</button></div>
+            <div class="card-body" id="profiles">
+                <span id="emptyProfiles">Your custom profiles will appear here.</span>
+                <div class="table-responsive">
+                    <table class="table" id="profileTableFull">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Hearts</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profileTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <br />
 
 <div class="row">
-    <div class="card">
-        <div class="card-header h4">Controllers<button class="btn btn-default float-right" data-toggle="modal" data-target="#modalAddController">Add Controller</button></div>
-        <div class="card-body">
-            Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header h4">Controllers<button class="btn btn-default float-right" data-toggle="modal" data-target="#modalAddController">Add Controller</button></div>
+            <div class="card-body" id="devices">
+                <span id="emptyDevices">Your registered devices will appear here.</span>
+                <div class="table-responsive">
+                    <table class="table" id="deviceTableFull">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deviceTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -79,11 +354,98 @@
                         <input class="form-control" type="text" id="registrationCode" maxlength="5" />
                     </div>
                 </form>
-                
+                <div><span class="text-danger" id="deviceMessage">&nbsp;</span></div>
 
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="registerDevice()" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal modal-lg" id="modalAddProfile" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Profile</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <canvas id="profileChart" width="600" height="400"></canvas>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="profileName">Profile Name: </label>
+                        <input class="form-control" type="text" id="profileName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="profileDescription">Profile Description: </label>
+                        <textarea class="form-control" id="profileDescription" maxlength="255"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="number" class="form-control" name="temp" step="0.1" max="90" min="32" placeholder="Temperature">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="duration" step="0.01" data-toggle="tooltip" data-placement="top" placeholder="Duration (in hours)">
+                        </div>
+                    </div>
+
+                </form>
+                <div><span class="text-danger" id="profileMessage">&nbsp;</span></div>
+
+                <Button class="btn btn-primary" onclick="addTempRow()">+</Button>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="createProfile()" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-lg" id="modalAddBrew" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Brew</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="brewForm">
+                    <div class="form-group">
+                        <label for="brewName">Brew Name: </label>
+                        <input class="form-control" type="text" id="brewName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="brewProfile">Profile: </label>
+                        <select class="form-control" id="brewProfile">
+                            <option>Select a profile...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="brewController">Controller: </label>
+                        <select class="form-control" id="brewController">
+                            <option>Select a controller...</option>
+                        </select>
+                    </div>
+
+
+                </form>
+                <div><span class="text-danger" id="brewMessage">&nbsp;</span></div>
+
+                <Button class="btn btn-primary" onclick="addTempRow()">+</Button>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="createBrew()" class="btn btn-primary">Save changes</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
